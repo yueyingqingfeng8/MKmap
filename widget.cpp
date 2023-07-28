@@ -2,7 +2,7 @@
 #include "ui_widget.h"
 #include <QDebug>
 #include <functional>
-
+ 
 
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
