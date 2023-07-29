@@ -24,6 +24,7 @@ Widget::Widget(QWidget *parent) :
 Widget::~Widget()
 {
     m_timer->stop();
+    m_Hook->uninstallHook();
 
     delete m_Hook;
     delete m_timer;
@@ -56,13 +57,8 @@ void Widget::on_pb_unload_clicked()
 
 void Widget::showMouse(QString str, int num)
 {
-    ui->lb_return->setText(str);
-}
-
-
-void Widget::on_pb_turn_clicked()
-{
-
+    ui->lb_return->setText(str + QString::number(num));
+//    ui->lb_return->setText(str);
 }
 
 void Widget::makeMouseInfo()

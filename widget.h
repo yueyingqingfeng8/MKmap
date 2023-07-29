@@ -25,8 +25,6 @@ private slots:
 
     void on_pb_unload_clicked();
 
-    void on_pb_turn_clicked();
-
     void makeMouseInfo();
 
 
