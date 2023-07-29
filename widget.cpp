@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <functional>
  
-
+ 
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
