@@ -52,4 +52,8 @@ Mkfile.old
 dkms.conf
 
 # Qt
+<<<<<<< HEAD
 .user
+=======
+*.user
+>>>>>>> b41c4367b2ade634d55c424685fc62318cdc7505
