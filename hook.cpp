@@ -1,6 +1,7 @@
 #include "hook.h"
 #include <QPoint>
 #include <QTimer>
+#include <QMap>
 
 static HHOOK g_hHook = NULL;
 
@@ -12,12 +13,18 @@ static int addKeyboardInfoEvent(QString key, QString key2, QString key3);
 static WORD convertKeyValue(QString key);
 static void initPosInfo();
 static void judgeDirection(MSLLHOOKSTRUCT* pMouseStruct);
+void findAndSendKeys();
 
 static QPoint pos;
 static QTimer timer;
 static QString direction;
 static bool rightKeyFunction = false;
 static bool replaceRightKey = false;
+
+static int functionNum = 0;
+static int totalSteps = 3;
+static int currentSteps = 0;
+static QMap<QString, QList<QString>> keyMap;
 
 Hook::Hook(QObject *parent) :QObject(parent)
 {
@@ -158,24 +165,62 @@ int gestureControl_turn(WPARAM wParam, LPARAM lParam)
 
     if(wParam == WM_RBUTTONDOWN)
     {
+        if(rightKeyFunction)
+        {
+            return 0;
+        }
         if(!timer.isActive())
         {
             pos.setX(pMouseStruct->pt.x);
             pos.setY(pMouseStruct->pt.y);
             timer.start(INTERCEPT_TIME);
+            currentSteps = 0;
+            direction.clear();
         }
+        return 1;
     }
 
     if(wParam == WM_RBUTTONUP)
     {
+        if(currentSteps != 0 && !direction.isEmpty())
+        {
+            replaceRightKey = true;
+            findAndSendKeys();
+            direction.clear();
+            currentSteps = 0;
+
+            if(timer.isActive())
+            {
+                initPosInfo();
+                currentSteps = 0;
+            }
+        }
+
+        //右键被代替
+        if(replaceRightKey)
+        {
+            replaceRightKey = false;
+            return 1;
+        }
+
+        //右键功能
+        if(rightKeyFunction)
+        {
+            rightKeyFunction = false;
+            return 0;
+        }
+
         if(timer.isActive())
         {
-            pos.setX(-1);
-            pos.setY(-1);
-            timer.stop();
-            dealMouseInfo(direction, 1);
-            direction.clear();
+            initPosInfo();
+            currentSteps = 0;
         }
+
+        rightKeyFunction = true;
+        addMouseInfoEvent(MOUSEEVENTF_RIGHTDOWN, pMouseStruct);
+        addMouseInfoEvent(MOUSEEVENTF_RIGHTUP, pMouseStruct);
+
+        return 1;
     }
 
     if(wParam == WM_MOUSEMOVE)
@@ -184,29 +229,48 @@ int gestureControl_turn(WPARAM wParam, LPARAM lParam)
         {
             if(timer.isActive())
             {
-                if(pMouseStruct->pt.y < pos.y() - 100)
+                if(currentSteps < totalSteps)
                 {
-                    pos.setX(pMouseStruct->pt.x);
-                    pos.setY(pMouseStruct->pt.y);
-                    direction.append("↑");
+                    if(pMouseStruct->pt.y < pos.y() - 100)
+                    {
+                        pos.setX(pMouseStruct->pt.x);
+                        pos.setY(pMouseStruct->pt.y);
+                        direction.append("U");
+                        currentSteps++;
+                    }
+                    else if(pMouseStruct->pt.y > pos.y() + 100)
+                    {
+                        pos.setX(pMouseStruct->pt.x);
+                        pos.setY(pMouseStruct->pt.y);
+                        direction.append("D");
+                        currentSteps++;
+                    }
+                    else if(pMouseStruct->pt.x < pos.x() - 100)
+                    {
+                        pos.setX(pMouseStruct->pt.x);
+                        pos.setY(pMouseStruct->pt.y);
+                        direction.append("L");
+                        currentSteps++;
+                    }
+                    else if(pMouseStruct->pt.x > pos.x() + 100)
+                    {
+                        pos.setX(pMouseStruct->pt.x);
+                        pos.setY(pMouseStruct->pt.y);
+                        direction.append("R");
+                        currentSteps++;
+                    }
                 }
-                else if(pMouseStruct->pt.y > pos.y() + 100)
+            }
+
+            if(currentSteps >= totalSteps || !timer.isActive())
+            {
+                timer.stop();
+                if(!direction.isEmpty())
                 {
-                    pos.setX(pMouseStruct->pt.x);
-                    pos.setY(pMouseStruct->pt.y);
-                    direction.append("↓");
-                }
-                else if(pMouseStruct->pt.x < pos.x() - 100)
-                {
-                    pos.setX(pMouseStruct->pt.x);
-                    pos.setY(pMouseStruct->pt.y);
-                    direction.append("←");
-                }
-                else if(pMouseStruct->pt.x > pos.x() + 100)
-                {
-                    pos.setX(pMouseStruct->pt.x);
-                    pos.setY(pMouseStruct->pt.y);
-                    direction.append("→");
+                    replaceRightKey = true;
+                    findAndSendKeys();
+                    direction.clear();
+                    currentSteps = 0;
                 }
             }
         }
@@ -214,6 +278,47 @@ int gestureControl_turn(WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+
+void findAndSendKeys()
+{
+    dealMouseInfo(direction + "    ", 1 * 10000 + 2);
+    if(direction == "U")
+    {
+        addKeyboardInfoEvent("u", "", "");
+    }
+    else if(direction == "R")
+    {
+        addKeyboardInfoEvent("r", "", "");
+    }
+    else if(direction == "L")
+    {
+        addKeyboardInfoEvent("l", "", "");
+    }
+    else if(direction == "D")
+    {
+        addKeyboardInfoEvent("d", "", "");
+    }
+    else if(direction == "DR")
+    {
+        addKeyboardInfoEvent("d", "r", "");
+    }
+    else if(direction == "DL")
+    {
+        addKeyboardInfoEvent("d", "l", "");
+    }
+    else if(direction == "DU")
+    {
+        addKeyboardInfoEvent("d", "u", "");
+    }
+    else if(direction == "DD")
+    {
+        addKeyboardInfoEvent("d", "d", "");
+    }
+    else
+    {
+        addKeyboardInfoEvent("s", "", "");
+    }
 }
 
 int gestureControl_click(WPARAM wParam, LPARAM lParam)
@@ -249,7 +354,12 @@ LRESULT CALLBACK MouseHookCallback(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code == HC_ACTION)
     {
-        if(gestureControl_unidirectional(wParam, lParam))
+//        if(gestureControl_unidirectional(wParam, lParam))
+//        {
+//            return 1;
+//        }
+
+        if(gestureControl_turn(wParam, lParam))
         {
             return 1;
         }
