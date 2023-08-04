@@ -9,7 +9,7 @@
 namespace Ui {
 class Widget;
 }
-
+ 
 class Widget : public QWidget
 {
     Q_OBJECT
@@ -24,8 +24,6 @@ private slots:
     void on_pb_install_clicked();
 
     void on_pb_unload_clicked();
-
-    void on_pb_turn_clicked();
 
     void makeMouseInfo();
 
