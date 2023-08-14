@@ -26,11 +26,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         widget.cpp \
-    hook.cpp
+    hook.cpp \
+    mkfun.cpp \
+    paintwidget.cpp
 
 HEADERS += \
         widget.h \
-    hook.h
+    hook.h \
+    mkfun.h \
+    common.h \
+    keymap.h \
+    paintwidget.h
 
 FORMS += \
-        widget.ui
+        widget.ui \
+    paintwidget.ui
