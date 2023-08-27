@@ -66,18 +66,22 @@ void Widget::showKeys(QString direction)
     ui->pb_key2->setText("");
     ui->pb_key3->setText("");
 
-    if (direction.isEmpty()) return;
+    if (direction.isEmpty())
+        return;
+
+    auto[type, strList] = m_mkfun->searchKeys(direction.toStdString());
+
+    if (-1 == type)
+        return;
+
     m_currentDirection = direction;
 
-    int type = -1;
-    QPair<int, QStringList> pair;
+    m_currentKeysInfo.first = type;
 
-    pair.second = m_mkfun->searchKeys(direction, type);
-    pair.first = type;
-
-    if (pair.second.isEmpty()) return;
-
-    m_currentKeysInfo = pair;
+    for (auto& info : strList)
+    {
+        m_currentKeysInfo.second.append(QString(info.c_str()));
+    }
 
     if (!m_currentKeysInfo.second.isEmpty())
     {

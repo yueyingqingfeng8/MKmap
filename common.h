@@ -12,14 +12,11 @@
 #include <QTextStream>
 #include <QJsonArray>
 #include <QMap>
+#include <QKeyEvent>
+#include <tuple>
 
-typedef std::function<int(int&, WPARAM&, LPARAM&)> EFFECT_FUN;
+
 typedef std::function<void(QString, int)>   CALLBACKMOUSE_FUN;
-
-typedef struct sendInfo {
-    int lenth;
-    INPUT inputs[10];
-} SENDINFO;
 
 enum Effect
 {

@@ -18,8 +18,8 @@ Mkfun::~Mkfun()
 
 int Mkfun::addMouseInfoEvent(int type, MSLLHOOKSTRUCT* mouseInfo)
 {
-    SENDINFO info;
-    memset(&info, 0x00, sizeof(SENDINFO));
+    HOOK::SENDINFO info;
+    memset(&info, 0x00, sizeof(HOOK::SENDINFO));
 
     info.lenth = 1;
     ZeroMemory(info.inputs, sizeof(info.inputs));
@@ -37,9 +37,9 @@ int Mkfun::addMouseInfoEvent(int type, MSLLHOOKSTRUCT* mouseInfo)
     return 1;
 }
 
-void Mkfun::installEffect(int fun)
+void Mkfun::installEffect(int funType)
 {
-    switch (fun)
+    switch (funType)
     {
     case ONEWAY:
         m_Hook->setEffectFun(m_effectFun);
@@ -182,8 +182,8 @@ int Mkfun::addKeyboardInfoEvent(QString keys)
 
     if (!array.isEmpty())
     {
-        SENDINFO info;
-        memset(&info, 0x00, sizeof(SENDINFO));
+        HOOK::SENDINFO info;
+        memset(&info, 0x00, sizeof(HOOK::SENDINFO));
 
         info.lenth = 0;
         ZeroMemory(info.inputs, sizeof(info.inputs));
@@ -234,8 +234,8 @@ int Mkfun::addKeyboardInfoEvent(QString key1, QString key2, QString key3)
     int key2_t = 0;
     int key3_t = 0;
 
-    SENDINFO info;
-    memset(&info, 0x00, sizeof(SENDINFO));
+    HOOK::SENDINFO info;
+    memset(&info, 0x00, sizeof(HOOK::SENDINFO));
 
     info.lenth = 0;
     ZeroMemory(info.inputs, sizeof(info.inputs));
@@ -391,15 +391,14 @@ int Mkfun::uninstallHook()
 
 void Mkfun::initClass()
 {
-    m_Hook  = new Hook(this);
+    m_Hook  = new Hook();
     m_timer = new QTimer(this);
     m_pos   = new QPoint(-1, -1);
     m_keys2int = new QMap<QString, int>();
     m_int2keys = new QMap<int, QString>();
 
-    m_effectFun = std::bind(&Mkfun::effectFun_oneway, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
     m_intercept_time = INTERCEPT_TIME;
+    m_effectFun = std::bind(&Mkfun::effectFun_oneway, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
     m_rightKeyMkfun   = false;
     m_replaceRightKey = false;
@@ -424,23 +423,26 @@ void Mkfun::exitClass()
     delete m_timer;
 }
 
-QList<QString> Mkfun::searchKeys(QString direction, int& type)
+std::tuple<int, std::list<std::string>> Mkfun::searchKeys(std::string direction)
 {
-    QList<QString> strList;
+    std::list<std::string> strList;
 
-    QJsonObject temp = m_keysInfo.value(direction).toObject();
-    if (temp.isEmpty()) return strList;
+    QJsonObject temp = m_keysInfo.value(QString(direction.c_str())).toObject();
+    if (temp.isEmpty())
+        return { -1, strList };
 
     QJsonArray array = temp.value("keys").toArray();
-    if (array.isEmpty()) return strList;
+    if (array.isEmpty())
+        return { -1, strList };
 
     for (int i = 0; i < array.count(); i++)
     {
-        strList.append(m_int2keys->value(array[i].toInt()));
+        QString temp = m_int2keys->value(array[i].toInt());
+        strList.push_back(temp.toStdString());
     }
 
-    type = temp.value("type").toInt();
-    return strList;
+    int type = temp.value("type").toInt();
+    return { type, strList };
 }
 
 QString Mkfun::searchInt2Keys(int num)

@@ -2,9 +2,8 @@
 #define MKFUN_H
 
 #include <QObject>
-#include <QKeyEvent>
 #include "hook.h"
-
+#include "common.h"
 
 class Mkfun : public QObject
 {
@@ -23,7 +22,7 @@ public:
     int addKeyboardInfoEvent(QString key1, QString key2, QString key3);
     int addKeyboardInfoEvent(QString keys);
 
-    void installEffect(int fun);
+    void installEffect(int funType);
     void setPrintMouseInfoFun(CALLBACKMOUSE_FUN fun);
 
     void readControlsSet();
@@ -32,7 +31,7 @@ public:
     void initKeysMap();
     void modifyControlSet(QString direction, int type, QStringList strList);
 
-    QList<QString> searchKeys(QString direction, int &type);
+    std::tuple<int, std::list<std::string>> searchKeys(std::string direction);
     QString searchInt2Keys(int num);
 
     int mkFunType();
@@ -55,7 +54,7 @@ private:
 
     int m_intercept_time;
 
-    EFFECT_FUN         m_effectFun;
+    HOOK::EFFECT_FUN   m_effectFun;
     CALLBACKMOUSE_FUN  m_printMouseInfoFun;
 
     QJsonObject m_setInfo;

@@ -1,10 +1,10 @@
 #include "hook.h"
-#include <QPoint>
-#include <QTimer>
-#include <QMap>
 
 static HHOOK g_hHook = NULL;
-static EFFECT_FUN effectFun = NULL;
+static HOOK::EFFECT_FUN effectFun = NULL;
+static HOOK::TIMER_FUN  timerFun = NULL;
+
+static VOID CALLBACK timerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 //static int addKeyboardInfoEvent(QString key, QString key2, QString key3);
 //static WORD convertKeyValue(QString key);
@@ -16,29 +16,87 @@ static EFFECT_FUN effectFun = NULL;
 //static int currentSteps = 0;
 //static QMap<QString, QList<QString>> keyMap;
 
-Hook::Hook(QObject *parent) :QObject(parent)
+Hook::Hook(int time)
 {
-    m_timer = new QTimer(this);
-    sendInfoList = new QList<SENDINFO>;
+    m_timerNum = 1;
+    m_sendInfoTime = time;
+    m_sendInfoList = new std::list<HOOK::SENDINFO>();
 
-    connect(m_timer, &QTimer::timeout, this, &Hook::sendInfos);
+    timerFun = std::bind(&Hook::sendInfos, this);
+    m_timer = SetTimer(NULL, m_timerNum, m_sendInfoTime, timerProc);
 
-    m_timer->start(100);
 }
 
 Hook::~Hook()
 {
-    m_timer->stop();
-
-    if(sendInfoList != NULL)
-    {
-        sendInfoList->clear();
-    }
-
-    delete sendInfoList;
-    delete m_timer;
+    KillTimer(NULL, m_timer);
+    delete m_sendInfoList;
 }
 
+static VOID CALLBACK timerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+    if (timerFun)
+        timerFun();
+}
+
+static LRESULT CALLBACK MouseHookCallback(int code, WPARAM wParam, LPARAM lParam)
+{
+    if (code == HC_ACTION)
+    {
+        if (effectFun != NULL)
+            return effectFun(code, wParam, lParam);
+    }
+
+    return CallNextHookEx(g_hHook, code, wParam, lParam);
+}
+
+void Hook::addSendInfo(HOOK::SENDINFO& info)
+{
+    m_sendInfoList->push_back(info);
+}
+
+void Hook::sendInfos()
+{
+    if (!m_sendInfoList->empty())
+    {
+        HOOK::SENDINFO info = m_sendInfoList->front();
+        m_sendInfoList->pop_front();
+
+        SendInput(info.lenth, info.inputs, sizeof(INPUT));
+    }
+}
+
+void Hook::setEffectFun(HOOK::EFFECT_FUN fun)
+{
+    effectFun = fun;
+}
+
+void Hook::setSendInfoTime(int time)
+{
+    KillTimer(NULL, m_timer);
+    m_sendInfoTime = time;
+    m_timer = SetTimer(NULL, m_timerNum, m_sendInfoTime, timerProc);
+}
+
+int Hook::installHook()
+{
+    g_hHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, NULL, 0);
+
+    return g_hHook == NULL ? 0 : 1;
+}
+
+int Hook::uninstallHook()
+{
+    //成功，返回非0
+    if(g_hHook != NULL)
+    {
+        HHOOK hook = g_hHook;
+        g_hHook = NULL;
+        return UnhookWindowsHookEx(hook);
+    }
+
+    return 1;
+}
 
 #if 0
 int gestureControl_turn(WPARAM wParam, LPARAM lParam)
@@ -232,89 +290,6 @@ int gestureControl_click(WPARAM wParam, LPARAM lParam)
     }
 }
 #endif
-
-LRESULT CALLBACK MouseHookCallback(int code, WPARAM wParam, LPARAM lParam)
-{
-    if (code == HC_ACTION)
-    {
-        if(effectFun != NULL)
-        {
-            if(effectFun(code, wParam, lParam))
-            {
-                return 1;
-            }
-        }
-
-//        if(gestureControl_unidirectional(wParam, lParam))
-//        {
-
-//        }
-
-//        if(gestureControl_turn(wParam, lParam))
-//        {
-//            return 1;
-//        }
-    }
-
-    return CallNextHookEx(g_hHook, code, wParam, lParam);
-}
-
-void Hook::addSendInfo(SENDINFO& info)
-{
-    sendInfoList->append(info);
-}
-
-void Hook::sendInfos()
-{
-    if(sendInfoList->count())
-    {
-        SENDINFO info = sendInfoList->takeFirst();
-
-        SendInput(info.lenth, info.inputs, sizeof(INPUT));
-    }
-}
-
-
-void Hook::setEffectFun(EFFECT_FUN fun)
-{
-    effectFun = fun;
-}
-
-int Hook::installHook()
-{
-    g_hHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, NULL, 0);
-    if(g_hHook == NULL)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
-int Hook::uninstallHook()
-{
-    //成功，返回非0
-    if(g_hHook != NULL)
-    {
-        if(UnhookWindowsHookEx(g_hHook))
-        {
-            g_hHook = NULL;
-            return 1;
-        }
-        else
-        {
-            g_hHook = NULL;
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
-
-
 
 
 
