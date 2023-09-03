@@ -99,7 +99,7 @@ void Widget::showKeys(QString direction)
 
 void Widget::initMkfun()
 {
-    m_mkfun = new Mkfun(this);
+    m_mkfun = new Mkfun();
     m_mkfun->installEffect(ONEWAY);
 
     CALLBACKMOUSE_FUN fun = std::bind(&Widget::showMouseInfo, this, std::placeholders::_1, std::placeholders::_2);

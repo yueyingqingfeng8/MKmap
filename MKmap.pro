@@ -23,22 +23,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += $$PWD/include
+include(SubHook/SubHook.pri)
+include(SubMkFun/SubMkFun.pri)
+include(SubBasics/SubBasics.pri)
+include(SubUICom/SubUICom.pri)
+include(SubUIKit/SubUIKit.pri)
 
 SOURCES += \
         main.cpp \
         widget.cpp \
-    hook.cpp \
-    mkfun.cpp \
-    paintwidget.cpp
+
 
 HEADERS += \
-        widget.h \
-    hook.h \
-    mkfun.h \
-    common.h \
-    keymap.h \
-    paintwidget.h
+        widget.h
+
 
 FORMS += \
-        widget.ui \
-    paintwidget.ui
+        widget.ui
