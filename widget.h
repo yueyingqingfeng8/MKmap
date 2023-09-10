@@ -7,6 +7,7 @@
 #include <QPair>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include "tray.h"
 
 namespace Ui {
 class Widget;
@@ -52,7 +53,12 @@ private slots:
     void on_sb_judgeDistance_editingFinished();
 
 private:
+    void runTrayCommand(Tray::TrayCommands num);
+    void closeEvent(QCloseEvent *event);
+
+private:
     Ui::Widget *ui;
+     Tray *m_tray;
 
     Mkfun* m_mkfun;
 

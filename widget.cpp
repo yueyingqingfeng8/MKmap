@@ -2,6 +2,8 @@
 #include "ui_widget.h"
 #include <QDebug>
 #include <functional>
+#include <qsystemtrayicon.h>
+#include <QMenu>
  
 #define KEYCOLOR_SELECT "rgb(194, 179, 255)"
 #define KEYCOLOR_NORMAL "rgb(219, 232, 255)"
@@ -20,6 +22,11 @@ Widget::Widget(QWidget *parent) :
     m_keyState_1 = 0;
     m_keyState_2 = 0;
     m_keyState_3 = 0;
+
+    this->setWindowTitle("MKmap");
+
+    m_tray = new Tray(this);
+    connect(m_tray, &Tray::trayCommandSignal, this, &Widget::runTrayCommand);
 }
 
 Widget::~Widget()
@@ -277,4 +284,28 @@ void Widget::on_sb_judgeDistance_editingFinished()
 
     m_mkfun->setDistance(moveDistance, judgeDistance);
     ui->widget->setDistance(moveDistance, judgeDistance);
+}
+
+void Widget::runTrayCommand(Tray::TrayCommands num)
+{
+    switch(num)
+    {
+    case Tray::TrayCommands::RestoreMainUI:
+        this->show();
+        break;
+    case Tray::TrayCommands::QuitProcess:
+        qApp->quit();
+        break;
+    case Tray::TrayCommands::TrayIconActivated:
+        this->show();
+        break;
+    default:
+        break;
+    }
+}
+
+void Widget::closeEvent(QCloseEvent *event)
+{
+    event->ignore();
+    this->hide();
 }
