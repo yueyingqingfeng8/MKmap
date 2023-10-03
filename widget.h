@@ -1,13 +1,13 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
-#include <QWidget>
+#include "common.h"
 #include "mkfun.h"
-#include "paintwidget.h"
-#include <QPair>
-#include <QMouseEvent>
-#include <QKeyEvent>
+#include "mouseoneway.h"
 #include "tray.h"
+#include "filerwer.h"
+
+#define  SETFILEPATH     "../setFile.json"   //配置文件路径
 
 namespace Ui {
 class Widget;
@@ -21,40 +21,40 @@ public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
 
-    void initMkfun();
-    void deleteMkfun();
-
-    void showMouseInfo(QString str, int num);
-    void showKeys(QString direction);
-
-    void keyPressEvent(QKeyEvent *event);
+    enum PgTestIndex
+    {
+        PG_TEST,
+        PG_MAIN
+    };
 
 private slots:
     void on_pb_install_clicked();
 
     void on_pb_unload_clicked();
 
-    void on_pb_setOneWay_clicked();
-
-    void on_pb_set_clicked();
+    void on_pb_test_clicked();
 
     void on_pb_save_clicked();
 
-    void on_pb_key1_clicked();
+    void on_pb_addOrderInfo_clicked();
 
-    void on_pb_key2_clicked();
+    void on_pb_deleteOrderInfo_clicked();
 
-    void on_pb_key3_clicked();
+    void on_pb_saveOrderInfo_clicked();
 
-    void on_pb_keysSave_clicked();
+    void on_pb_clearOrderInfo_clicked();
 
-    void on_sb_moveDistance_editingFinished();
+    void showLogInfo(mainUI::LogType type, QString str);
 
-    void on_sb_judgeDistance_editingFinished();
 
 private:
+    void initMkfun();
+    void deleteMkfun();
+
+    void closeEvent(QCloseEvent *event) override;
+
+    //托盘程序
     void runTrayCommand(Tray::TrayCommands num);
-    void closeEvent(QCloseEvent *event);
 
 private:
     Ui::Widget *ui;
@@ -62,25 +62,14 @@ private:
 
     Mkfun* m_mkfun;
 
-    int m_keyState_1;
-    int m_keyState_2;
-    int m_keyState_3;
-
     QString m_currentDirection;
     QPair<int, QStringList>  m_currentKeysInfo;
+
 };
 
-enum PgTestIndex
-{
-    PG_TEST,
-    PG_SET
-};
 
-enum PgSetIndex
-{
-    PG_WAYS,
-    PG_ONEWAY
-};
+
+
 
 
 #endif // WIDGET_H

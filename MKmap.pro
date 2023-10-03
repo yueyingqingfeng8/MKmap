@@ -26,12 +26,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += $$PWD/include
-include(SubHook/SubHook.pri)
-include(SubMkFun/SubMkFun.pri)
-include(SubBasics/SubBasics.pri)
-include(SubUICom/SubUICom.pri)
-include(SubUIKit/SubUIKit.pri)
-include(SubUI/SubUI.pri)
+include(SubMK_Hook/SubMK_Hook.pri)
+include(SubMK_MkFun/SubMK_MkFun.pri)
+include(SubMK_Utility/SubMK_Utility.pri)
+include(SubUI_Widgets/SubUI_Widgets.pri)
+include(SubUI_Kit/SubUI_Kit.pri)
+include(SubUI_Modules/SubUI_Modules.pri)
 
 SOURCES += \
         main.cpp \
